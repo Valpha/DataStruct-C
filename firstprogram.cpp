@@ -16,36 +16,87 @@ typedef struct LNode
     struct LNode *Next;
 } * LinkList;
 
-volatile int randomNum();
+int randomNum();
 Status printLNode(LinkList &L);
-Status initList(LinkList &L, int n);
+Status initList(LinkList &L, int n, char ch);
 Status outList(LinkList &L, int m);
 
 int main()
 {
     int n = 0, m = 0;
+    char ch;
     LinkList L;
+
     printf("请输入n的值：");
     scanf("%d", &n);
-    initList(L, n);
+    fflush(stdin);
+    printf("是否要手动输入密码？(Y/N)");
+    scanf("%c", &ch);
+    fflush(stdin);
+    if (!initList(L, n, ch))
+    {
+        printf("初始化错误！");
+        getchar();
+        exit(0);
+    }
     printLNode(L);
     printf("请输入m的值：");
     scanf("%d", &m);
-    outList(L, m);
+    if (!outList(L, m))
+    {
+        printf("出队错误！");
+        getchar();
+        exit(0);
+    }
+    getchar();
+    getchar();
+    getchar();
+    return OK;
 }
 
-Status initList(LinkList &L, int n)
+Status initList(LinkList &L, int n, char ch)
 {
-    LinkList p = L;
-    p->data = randomNum();
-    // p->Next = (LinkList)malloc(sizeof(LinkList));
-    for (size_t i = 0; i < n-1; i++)
+    int data;
+    L = (LinkList)malloc(sizeof(LNode));
+    if (L == NULL)
     {
-        p->Next = (LinkList)malloc(sizeof(LNode));
-        p = p->Next;
-        p->data = randomNum();
+        printf("错误");
+        return ERROR;
     }
-    p->Next = L;
+    LinkList p = L;
+    if (ch == 'Y' || ch == 'y')
+    {
+        printf("请输入密码：");
+        for (size_t i = 0; i < n; i++)
+        {
+            scanf("%d", &data);
+            p->data = data;
+            printf("你输入的是%d\n", p->data);
+            p->Next = (LinkList)malloc(sizeof(LNode));
+            if (i == n - 1)
+            {
+                p->Next = L;
+                break;
+            }
+            p = p->Next;
+        }
+    }
+    else
+    {
+        srand(time(NULL));
+        for (size_t i = 0; i < n; i++)
+        {
+            p->data = randomNum();
+            printf("随机生成的数字是%d\n", p->data);
+            p->Next = (LinkList)malloc(sizeof(LNode));
+            if (i == n - 1)
+            {
+                p->Next = L;
+                break;
+            }
+            p = p->Next;
+        }
+    }
     return OK;
 }
 
@@ -55,36 +106,50 @@ Status printLNode(LinkList &L)
 
     for (int i = 0;; i++)
     {
-        printf("这是第%d个元素，它的值为%d.\n", i, p->data);
-        p = p->Next;
+        printf("这是第%d个元素，它的值为%d.\n", i + 1, p->data);
+
         if (p->Next == L)
             break;
+        p = p->Next;
     }
     return OK;
 }
 
-volatile int randomNum()
+int randomNum()
 {
     int number;
-
-    srand(time(0)); //用时间做种，每次产生随机数不一样
     number = rand() % 10 + 1; //产生0-10的随机数
-    printf("%d ", number);
-
+    // printf("%d ", number);
     return number;
 }
 
 Status outList(LinkList &L, int m)
 {
-    LinkList p = L,q=L;
-    for (size_t i = 0; i < m; i++)
+    LinkList _out = L, _pre = L;
+    int data;
+    if (_out == _out->Next)
     {
-        p = p->Next;
-    }
-
-    if (p == p->Next)
-    {
+        printf("最后一个出队的元素为%d", _out->data);
         return OK;
     }
-    outList(p, p->data);
+    for (size_t i = 0; i < m - 1; i++)
+    {
+        _out = _out->Next;
+    }
+    printf("出队的元素为%d\n", _out->data);
+    for (size_t i = 0;; i++)
+    {
+        if (_pre->Next == _out)
+            break;
+        _pre = _pre->Next; 
+    }
+    _pre->Next = _out->Next;
+    data = _out->data;
+    if (L==_out)
+    {
+        L = _out->Next;
+    }
+    free(_out);
+    outList(L, data);
+    return OK;
 }
